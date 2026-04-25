@@ -21,6 +21,8 @@ class PayoutViewSet(viewsets.ViewSet):
     serializer_class = PayoutSerializer
 
     def create(self, request):
+        insufficient_funds = False
+
         header_serializer = PayoutCreateHeadersSerializer(
             data=PayoutCreateHeadersSerializer.from_request_headers(request.headers)
         )
@@ -68,24 +70,33 @@ class PayoutViewSet(viewsets.ViewSet):
                     idempotency_key=header_serializer.validated_data["idempotency_key"],
                 )
             except InsufficientFundsError:
-                return Response(
-                    {"detail": "Insufficient funds."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                # Do not retain a NULL response idempotency record for business rejections.
+                # This prevents the same key from getting stuck in perpetual "in_flight".
+                if idempotency_result.record is not None:
+                    idempotency_result.record.delete()
+                insufficient_funds = True
+                payout = None
 
-            response_payload = PayoutResponseSerializer(
-                {
-                    "id": payout.id,
-                    "status": payout.status,
-                    "amount_paise": payout.amount_paise,
-                    "created_at": payout.created_at,
-                }
-            ).data
+            if not insufficient_funds:
+                response_payload = PayoutResponseSerializer(
+                    {
+                        "id": payout.id,
+                        "status": payout.status,
+                        "amount_paise": payout.amount_paise,
+                        "created_at": payout.created_at,
+                    }
+                ).data
 
-            if idempotency_result.record is not None:
-                store_idempotent_response(
-                    record=idempotency_result.record,
-                    body=response_payload,
-                    status_code=status.HTTP_201_CREATED,
-                )
-            return Response(response_payload, status=status.HTTP_201_CREATED)
+                if idempotency_result.record is not None:
+                    store_idempotent_response(
+                        record=idempotency_result.record,
+                        body=response_payload,
+                        status_code=status.HTTP_201_CREATED,
+                    )
+                return Response(response_payload, status=status.HTTP_201_CREATED)
+
+        if insufficient_funds:
+            return Response(
+                {"detail": "Insufficient funds."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )

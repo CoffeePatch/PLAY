@@ -42,29 +42,35 @@ def begin_idempotency_window(*, merchant, key) -> IdempotencyResult:
             return IdempotencyResult(state="in_flight")
 
     try:
+        record, created = IdempotencyRecord.objects.get_or_create(
+            merchant=merchant,
+            key=key,
+            defaults={"response_data": None},
+        )
+    except IntegrityError:
+        # Another transaction won the insert race. Re-read and respond deterministically.
+        record = IdempotencyRecord.objects.get(merchant=merchant, key=key)
+        created = False
+
+    if created:
+        return IdempotencyResult(state="created", record=record)
+
+    if _is_expired(record):
+        record.delete()
         record = IdempotencyRecord.objects.create(
             merchant=merchant,
             key=key,
             response_data=None,
         )
         return IdempotencyResult(state="created", record=record)
-    except IntegrityError:
-        # Another transaction won the insert race. Re-read and respond deterministically.
-        record = IdempotencyRecord.objects.get(merchant=merchant, key=key)
-        if _is_expired(record):
-            record.delete()
-            record = IdempotencyRecord.objects.create(
-                merchant=merchant,
-                key=key,
-                response_data=None,
-            )
-            return IdempotencyResult(state="created", record=record)
-        if record.response_data:
-            return IdempotencyResult(
-                state="replay",
-                replay_payload=record.response_data,
-            )
-        return IdempotencyResult(state="in_flight")
+
+    if record.response_data:
+        return IdempotencyResult(
+            state="replay",
+            replay_payload=record.response_data,
+        )
+
+    return IdempotencyResult(state="in_flight")
 
 
 def store_idempotent_response(*, record: IdempotencyRecord, body: dict, status_code: int) -> None:
