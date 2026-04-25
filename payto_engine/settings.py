@@ -109,3 +109,9 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULE = {
+    "process-pending-payouts-every-10-seconds": {
+        "task": "payouts.tasks.process_pending_payouts",
+        "schedule": 10.0,
+    }
+}

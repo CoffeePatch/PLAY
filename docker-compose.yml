@@ -17,5 +17,47 @@ services:
     ports:
       - "6379:6379"
 
+  celery_worker:
+    image: python:3.12-slim
+    container_name: payto-celery-worker
+    working_dir: /app
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+      celery -A payto_engine worker --loglevel=info"
+    volumes:
+      - ./:/app
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DB_NAME: payto_engine
+      DB_USER: payto
+      DB_PASSWORD: payto
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+
+  celery_beat:
+    image: python:3.12-slim
+    container_name: payto-celery-beat
+    working_dir: /app
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+      celery -A payto_engine beat --loglevel=info"
+    volumes:
+      - ./:/app
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DB_NAME: payto_engine
+      DB_USER: payto
+      DB_PASSWORD: payto
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+
 volumes:
   postgres_data:
