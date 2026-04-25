@@ -1,0 +1,15 @@
+# Local artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local DB
+/db.sqlite3
+
+# Local notes/challenge docs (do not commit)
+/implementation_plan.md
+/Playto Founding Engineer Challenge 2026.md
+
+# Stray local shell artifact
+/tatus -sb
