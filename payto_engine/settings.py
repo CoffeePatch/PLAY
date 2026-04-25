@@ -113,5 +113,9 @@ CELERY_BEAT_SCHEDULE = {
     "process-pending-payouts-every-10-seconds": {
         "task": "payouts.tasks.process_pending_payouts",
         "schedule": 10.0,
-    }
+    },
+    "retry-stuck-payouts-every-10-seconds": {
+        "task": "payouts.tasks.retry_stuck_payouts",
+        "schedule": 10.0,
+    },
 }

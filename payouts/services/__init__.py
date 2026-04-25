@@ -2,6 +2,7 @@ from .exceptions import InsufficientFundsError
 from .idempotency import begin_idempotency_window, store_idempotent_response
 from .merchant_queries import get_balance_snapshot, get_held_balance_paise
 from .payouts import create_pending_payout
+from .processor import process_pending_payouts_batch, retry_stuck_payouts_batch, simulate_bank_outcome
 from .seed_data import seed_demo_data
 
 __all__ = [
@@ -12,4 +13,7 @@ __all__ = [
 	"InsufficientFundsError",
 	"get_balance_snapshot",
 	"get_held_balance_paise",
+	"simulate_bank_outcome",
+	"process_pending_payouts_batch",
+	"retry_stuck_payouts_batch",
 ]
