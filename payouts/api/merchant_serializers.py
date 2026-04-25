@@ -1,6 +1,27 @@
 from rest_framework import serializers
 
-from payouts.models import LedgerEntry, Payout
+from payouts.models import BankAccount, LedgerEntry, Merchant, Payout
+
+
+class MerchantOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Merchant
+        fields = [
+            "id",
+            "name",
+            "email",
+        ]
+
+
+class BankAccountOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BankAccount
+        fields = [
+            "id",
+            "account_number",
+            "ifsc",
+            "is_primary",
+        ]
 
 
 class MerchantBalanceSerializer(serializers.Serializer):

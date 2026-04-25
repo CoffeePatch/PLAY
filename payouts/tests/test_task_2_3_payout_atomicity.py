@@ -131,3 +131,44 @@ class Task23PayoutAtomicityTests(TransactionTestCase):
             1,
         )
         self.assertEqual(Merchant.objects.get_balance(merchant.id), 4_000)
+
+    def test_concurrent_same_idempotency_key_creates_single_payout(self):
+        if connection.vendor == "sqlite":
+            self.skipTest("SQLite does not provide reliable row-level locking for this concurrency test.")
+
+        merchant, account = self._create_merchant_with_credit(credit_paise=10_000)
+        shared_key = str(uuid.uuid4())
+        barrier = threading.Barrier(2)
+        statuses: list[int] = []
+
+        def worker():
+            close_old_connections()
+            try:
+                barrier.wait()
+                response = self._post_payout(
+                    merchant_id=merchant.id,
+                    bank_account_id=account.id,
+                    amount_paise=6_000,
+                    idempotency_key=shared_key,
+                )
+                statuses.append(response.status_code)
+            except Exception:
+                statuses.append(-1)
+
+        first = threading.Thread(target=worker)
+        second = threading.Thread(target=worker)
+        first.start()
+        second.start()
+        first.join()
+        second.join()
+
+        self.assertEqual(sorted(statuses), [201, 201])
+        self.assertEqual(Payout.objects.filter(merchant=merchant, idempotency_key=shared_key).count(), 1)
+        self.assertEqual(
+            LedgerEntry.objects.filter(
+                merchant=merchant,
+                entry_type=LedgerEntryType.HOLD,
+                amount_paise=6_000,
+            ).count(),
+            1,
+        )
