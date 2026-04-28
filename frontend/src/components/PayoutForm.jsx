@@ -34,19 +34,25 @@ export default function PayoutForm({
 
   // Set default account on load
   useEffect(() => {
-    if (accounts.length > 0 && !selectedAccountId) {
-      const primaryAccount = accounts.find((acc) => acc.is_primary)
-      setSelectedAccountId(String(primaryAccount?.id || accounts[0].id))
-    }
-
     if (accounts.length === 0) {
       setSelectedAccountId("")
+      return
+    }
+
+    const selectedAccountExists = accounts.some(
+      (account) => String(account.id) === selectedAccountId
+    )
+
+    if (!selectedAccountExists) {
+      const primaryAccount = accounts.find((acc) => acc.is_primary)
+      setSelectedAccountId(String(primaryAccount?.id || accounts[0].id))
     }
   }, [accounts, selectedAccountId])
 
   useEffect(() => {
     setAmountRupees("")
     setIdempotencyKey(generateUUID())
+    setSelectedAccountId("")
   }, [merchantId])
 
   const handleSubmit = async (e) => {

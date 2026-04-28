@@ -3,13 +3,17 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+venv/
 
 # Local DB
 /db.sqlite3
 
 # Local notes/challenge docs (do not commit)
-/implementation_plan.md
+
 /Playto Founding Engineer Challenge 2026.md
+/EXPLAINER.md
+/.env
+/.env.*
 
 # Stray local shell artifact
 /tatus -sb

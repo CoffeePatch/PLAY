@@ -9,8 +9,6 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    config.headers = config.headers ?? {}
-    config.headers["X-Client"] = "playto-dashboard"
     return config
   },
   (error) => Promise.reject(error)

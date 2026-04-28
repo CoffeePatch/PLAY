@@ -53,6 +53,9 @@ export const formatShortDate = (dateString) => {
  * @returns {string} Truncated text
  */
 export const truncateText = (text, maxLength = 32) => {
-  if (!text || text.length <= maxLength) return text
-  return `${text.substring(0, maxLength - 3)}...`
+  if (text === null || text === undefined) return ""
+
+  const normalizedText = String(text)
+  if (normalizedText.length <= maxLength) return normalizedText
+  return `${normalizedText.substring(0, maxLength - 3)}...`
 }

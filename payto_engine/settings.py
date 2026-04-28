@@ -1,6 +1,11 @@
 from pathlib import Path
 import os
 
+from corsheaders.defaults import default_headers
+from dotenv import load_dotenv
+
+load_dotenv() # Explicitly load local .env variables
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -92,6 +97,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "idempotency-key",
+    "x-merchant-id",
+]
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
