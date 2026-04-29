@@ -10,8 +10,6 @@ venv/
 
 # Local notes/challenge docs (do not commit)
 
-/Playto Founding Engineer Challenge 2026.md
-/EXPLAINER.md
 /.env
 /.env.*
 
